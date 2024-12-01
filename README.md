@@ -17,7 +17,7 @@ A machine learning-powered web application that predicts irrigation needs for cr
 - Interactive web interface with sliders and dropdown menus
 - Visual results display with confidence indicators
 
-## Tech Stack
+## Technologies
 
 ### Backend
 
