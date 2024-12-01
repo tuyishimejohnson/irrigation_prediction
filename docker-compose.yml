@@ -2,24 +2,27 @@ version: '3.8'
 
 services:
   backend:
-    build: 
-      context: ./backend
-      dockerfile: Dockerfile
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
     ports:
       - "8000:8000"
     volumes:
+      - ./src:/app/src
       - ./models:/app/models
     environment:
-      - PORT=8000
-      - HOST=0.0.0.0
+      - PYTHONUNBUFFERED=1
 
   frontend:
     build:
-      context: ./frontend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: frontend/Dockerfile
     ports:
-      - "3000:80"
-    depends_on:
-      - backend
+      - "5173:5173"
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
     environment:
       - VITE_API_URL=http://localhost:8000
+    depends_on:
+      - backend
