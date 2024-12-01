@@ -34,9 +34,6 @@ A machine learning-powered web application that predicts irrigation needs for cr
 - Axios (API calls)
 
 
-
-
-
 ## Setup Instructions
 
 ### Prerequisites
