@@ -1,9 +1,10 @@
 import IrrigationPrediction from "./components/IrrigationPrediction";
+import DefaultLayout from "./defaultLayout";
 
 function App() {
   return (
     <>
-      <h1>Hello World</h1>
+      <DefaultLayout />
       <IrrigationPrediction />
     </>
   );

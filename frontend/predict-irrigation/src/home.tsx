@@ -1,6 +1,5 @@
 import irrigation from "./assets/images/erwan-hesry-1q75BReKpms-unsplash.jpg";
-import Button from "./components/button";
-import Footer from "./components/footer";
+import Button from "./components/Button";
 import { NavLink } from "react-router-dom";
 import { faArrowRight } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -109,7 +108,6 @@ const Home = () => {
           </div>
         </div>
       </div>
-      <Footer />
     </div>
   );
 };
