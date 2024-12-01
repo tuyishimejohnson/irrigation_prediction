@@ -32,3 +32,40 @@ A machine learning-powered web application that predicts irrigation needs for cr
 - TypeScript
 - Material-UI
 - Axios (API calls)
+
+
+
+
+
+## Setup Instructions
+
+### Prerequisites
+- Python 3.8+
+- Node.js 16+
+- npm or yarn
+
+### Backend Setup
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/yourusername/irrigation_prediction.git
+   cd irrigation_prediction
+   ```
+
+2. Create and activate a virtual environment:
+   ```bash
+   python -m venv venv
+   - source venv/bin/activate  
+   - On Windows: venv\Scripts\activate
+   ```
+
+3. Install backend dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. Start the FastAPI server:
+   ```bash
+   uvicorn src.app:app --reload
+   ```
+
