@@ -68,3 +68,22 @@ A machine learning-powered web application that predicts irrigation needs for cr
 
 Link of a deployed platform
 [Predict Irrigation Platform](https://predict-irrigation.netlify.app/)
+
+
+### Docker Setup
+
+1. Make sure you have Docker and Docker Compose installed on your system
+
+2. Build and run the containers:
+   ```bash
+   docker-compose up --build
+   ```
+
+3. Access the applications:
+   - Frontend: http://localhost:5173
+   - Backend API: http://localhost:8000
+
+4. To stop the containers:
+   ```bash
+   docker-compose down
+   ```
