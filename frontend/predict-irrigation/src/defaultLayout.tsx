@@ -16,13 +16,13 @@ const DefaultLayout = () => {
             <NavLink to={"/about"} className={activeLinks}>
               About
             </NavLink>
-            <NavLink to={"/solution"} className={activeLinks}>
-              Solution
-            </NavLink>
             <NavLink to={"/predict"} className={activeLinks}>
               Predict
             </NavLink>
-            <NavLink to={"/contacts"} className={activeLinks}>
+            <NavLink to={"/Results"} className={activeLinks}>
+              Contacts
+            </NavLink>
+            <NavLink to={"/Results"} className={activeLinks}>
               Contacts
             </NavLink>
           </div>

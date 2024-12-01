@@ -5,6 +5,7 @@ import { faArrowRight } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import graph2 from "./assets/images/rwanda-gdp-from-agriculture.png";
 
+
 interface Structure {
   percentage: number;
   description: string;
@@ -42,7 +43,7 @@ const Home = () => {
                 Welcome to Smart Irrigation
               </h1>
               <Button className="border mt-10 px-5 py-3 flex rounded-full gap-3 items-center hover:text-blue-500 hover:bg-white">
-                <NavLink to={"/about"}>Learn more</NavLink>
+                <NavLink to={"/IrrigationPrediction"}>Predict</NavLink>
                 <FontAwesomeIcon icon={faArrowRight} />
               </Button>
             </div>

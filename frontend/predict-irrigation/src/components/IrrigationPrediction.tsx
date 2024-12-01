@@ -88,7 +88,7 @@ const IrrigationPredictionForm: React.FC = () => {
 
   return (
     <Box sx={{ maxWidth: 800, margin: "auto", padding: 3 }}>
-      <Typography variant="h4" gutterBottom>
+      <Typography variant="h4" gutterBottom className="text-2xl">
         Irrigation Prediction System
       </Typography>
 
