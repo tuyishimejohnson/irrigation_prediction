@@ -13,17 +13,18 @@ const DefaultLayout = () => {
 
         <div className="flex justify-between gap-5 items-center">
           <div className="flex gap-10">
-            <NavLink to={"/about"} className={activeLinks}>
-              About
+          <NavLink to={"/"} className={activeLinks}>
+              Home
             </NavLink>
-            <NavLink to={"/predict"} className={activeLinks}>
+            <NavLink to={"/IrrigationPrediction"} className={activeLinks}>
               Predict
             </NavLink>
-            <NavLink to={"/Results"} className={activeLinks}>
-              Contacts
+            
+            <NavLink to={"/retrain"} className={activeLinks}>
+              Retrain
             </NavLink>
             <NavLink to={"/Results"} className={activeLinks}>
-              Contacts
+              Results
             </NavLink>
           </div>
         </div>

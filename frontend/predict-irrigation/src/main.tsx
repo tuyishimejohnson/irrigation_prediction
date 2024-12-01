@@ -4,7 +4,10 @@ import "./index.css";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import DefaultLayout from "./defaultLayout.tsx";
 import Home from "./home.tsx";
+import Retrain from "./retrain.tsx";
+import Results from "./results.tsx";
 import IrrigationPrediction from "./components/IrrigationPrediction.tsx";
+
 const router = createBrowserRouter([
   {
     path: "/",
@@ -18,6 +21,14 @@ const router = createBrowserRouter([
         path: "/IrrigationPrediction",
         element: <IrrigationPrediction />,
       },
+      {
+        path: "/retrain",
+        element: <Retrain />,
+      },
+      {
+        path: "/results",
+        element: <Results />,
+      },
     ],
   },
 ]);
@@ -27,4 +38,3 @@ createRoot(document.getElementById("root")!).render(
     <RouterProvider router={router} />
   </StrictMode>
 );
-
