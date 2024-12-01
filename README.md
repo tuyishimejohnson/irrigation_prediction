@@ -66,3 +66,5 @@ A machine learning-powered web application that predicts irrigation needs for cr
    uvicorn src.app:app --reload
    ```
 
+Link of a deployed platform
+[Predict Irrigation Platform](https://predict-irrigation.netlify.app/)
