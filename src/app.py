@@ -42,28 +42,18 @@ class PredictionInput(BaseModel):
 @app.post("/predict")
 async def predict_irrigation(input_data: PredictionInput):
     try:
-        # Prepare input features - ONLY numerical features for scaling
-        features = np.array([
+        # Only use numerical features
+        features = np.array([[
             input_data.moi,
             input_data.temp,
             input_data.humidity
-        ]).reshape(1, -1)
+        ]])
         
-        # Scale only the numerical features
+        # Scale features
         features_scaled = scaler.transform(features)
         
-        # Add categorical features AFTER scaling
-        features_final = np.hstack([
-            np.array([[input_data.crop_id]]),  # Add crop_id
-            features_scaled,
-            np.array([[
-                input_data.soil_type,
-                input_data.seedling_stage
-            ]])
-        ])
-        
-        # Make prediction with complete feature set
-        prediction = model.predict(features_final)[0]
+        # Make prediction
+        prediction = model.predict(features_scaled)[0]
         probability = float(prediction[0]) if hasattr(prediction, '__len__') else float(prediction)
         
         # Generate recommendation based on probability
@@ -108,25 +98,21 @@ async def get_model_info():
 @app.post("/retrain")
 async def retrain_model(file: UploadFile = File(...)):
     try:
-        # Read the uploaded CSV file
         contents = await file.read()
         df = pd.read_csv(pd.io.common.BytesIO(contents))
         
-        # Prepare features
+        # Prepare numerical features only
         numerical_features = ['MOI', 'temp', 'humidity']
         X = df[numerical_features].values
         y = df['result'].values
         
-        # Split data
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
-        
         # Scale features
         scaler = StandardScaler()
-        X_train_scaled = scaler.fit_transform(X_train)
+        X_scaled = scaler.fit_transform(X)
         
-        # Create and train new model
+        # Create model for 3 numerical features
         model = tf.keras.Sequential([
-            tf.keras.layers.Dense(64, activation='relu', input_shape=(X_train.shape[1],)),
+            tf.keras.layers.Dense(64, activation='relu', input_shape=(3,)),  # Changed to 3 features
             tf.keras.layers.Dropout(0.2),
             tf.keras.layers.Dense(32, activation='relu'),
             tf.keras.layers.Dropout(0.2),
@@ -139,12 +125,12 @@ async def retrain_model(file: UploadFile = File(...)):
                      loss='binary_crossentropy',
                      metrics=['accuracy'])
         
-        history = model.fit(X_train_scaled, y_train,
+        history = model.fit(X_scaled, y,
                           epochs=30,
                           batch_size=32,
                           validation_split=0.2)
         
-        # Save new model and scaler
+        # Save model and scaler
         model_data = {
             'model': model,
             'scaler': scaler,
@@ -153,7 +139,6 @@ async def retrain_model(file: UploadFile = File(...)):
         }
         joblib.dump(model_data, 'models/cropmodel.pkl')
         
-        # Return training results
         return {
             "message": "Model retrained successfully",
             "history": {
@@ -161,6 +146,5 @@ async def retrain_model(file: UploadFile = File(...)):
                 "val_accuracy": float(history.history['val_accuracy'][-1])
             }
         }
-        
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Retraining error: {str(e)}")
