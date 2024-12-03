@@ -88,7 +88,7 @@ const IrrigationPredictionForm: React.FC = () => {
 
   return (
     <Box sx={{ maxWidth: 800, margin: "auto", padding: 3 }}>
-      <Typography variant="h4" gutterBottom className="text-2xl">
+      <Typography variant="h4" gutterBottom style={{fontFamily: "monospace"}}>
         Irrigation Prediction System
       </Typography>
 
@@ -96,7 +96,7 @@ const IrrigationPredictionForm: React.FC = () => {
       <Paper elevation={3} sx={{ padding: 3, marginBottom: 3 }}>
         <form onSubmit={handleSubmit}>
           <FormControl fullWidth sx={{ marginBottom: 2 }}>
-            <InputLabel>Soil Type</InputLabel>
+            <InputLabel style={{fontFamily: "monospace"}}>Soil Type</InputLabel>
             <Select
               value={formData.soil_type}
               label="Soil Type"
@@ -114,7 +114,7 @@ const IrrigationPredictionForm: React.FC = () => {
           </FormControl>
 
           <FormControl fullWidth sx={{ marginBottom: 2 }}>
-            <InputLabel>Seedling Stage</InputLabel>
+            <InputLabel style={{fontFamily: "monospace"}}>Seedling Stage</InputLabel>
             <Select
               value={formData.seedling_stage}
               label="Seedling Stage"
@@ -132,7 +132,7 @@ const IrrigationPredictionForm: React.FC = () => {
           </FormControl>
 
           <Box sx={{ marginBottom: 2 }}>
-            <Typography gutterBottom>Moisture Index</Typography>
+            <Typography gutterBottom style={{fontFamily: "monospace"}}>Moisture Index</Typography>
             <Slider
               value={formData.moi}
               onChange={(_, value) =>
@@ -145,7 +145,7 @@ const IrrigationPredictionForm: React.FC = () => {
           </Box>
 
           <Box sx={{ marginBottom: 2 }}>
-            <Typography gutterBottom>Temperature (°C)</Typography>
+            <Typography gutterBottom style={{fontFamily: "monospace"}}>Temperature (°C)</Typography>
             <Slider
               value={formData.temp}
               onChange={(_, value) =>
@@ -158,7 +158,7 @@ const IrrigationPredictionForm: React.FC = () => {
           </Box>
 
           <Box sx={{ marginBottom: 2 }}>
-            <Typography gutterBottom>Humidity (%)</Typography>
+            <Typography gutterBottom style={{fontFamily: "monospace"}}>Humidity (%)</Typography>
             <Slider
               value={formData.humidity}
               onChange={(_, value) =>
@@ -176,6 +176,7 @@ const IrrigationPredictionForm: React.FC = () => {
             color="primary"
             fullWidth
             disabled={loading}
+            style={{fontFamily: "monospace"}}
           >
             {loading ? <CircularProgress size={24} /> : "Predict"}
           </Button>
@@ -192,7 +193,7 @@ const IrrigationPredictionForm: React.FC = () => {
       {/* Results Display */}
       {predictionResult && (
         <Paper elevation={3} sx={{ padding: 3 }}>
-          <Typography variant="h5" gutterBottom>
+          <Typography variant="h5" gutterBottom style={{fontFamily: "monospace"}}>
             Prediction Results
           </Typography>
 
@@ -202,34 +203,36 @@ const IrrigationPredictionForm: React.FC = () => {
               value={predictionResult.confidence * 100}
               size={80}
               sx={{ marginRight: 2 }}
+              style={{fontFamily: "monospace"}}
             />
             <Box>
               <Typography
                 variant="h6"
+                style={{fontFamily: "monospace"}}
                 color={predictionResult.needs_irrigation ? "error" : "success"}
               >
                 {predictionResult.needs_irrigation
                   ? "Irrigation Needed"
                   : "No Irrigation Needed"}
               </Typography>
-              <Typography>
+              <Typography style={{fontFamily: "monospace"}}>
                 Confidence: {(predictionResult.confidence * 100).toFixed(1)}%
               </Typography>
             </Box>
           </Box>
 
-          <Typography variant="h6" gutterBottom>
+          <Typography variant="h6" gutterBottom style={{fontFamily: "monospace"}}>
             Recommendation:
           </Typography>
-          <Typography>{predictionResult.recommendation}</Typography>
+          <Typography style={{fontFamily: "monospace", color:"#168aeb"}}>{predictionResult.recommendation}</Typography>
 
-          <Typography variant="h6" gutterBottom>
+          <Typography variant="h6" gutterBottom style={{fontFamily: "monospace"}}>
             Input Parameters:
           </Typography>
-          <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
+          <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }} >
             {Object.entries(predictionResult.input_parameters).map(
               ([key, value]) => (
-                <Typography key={key}>
+                <Typography key={key} style={{fontFamily: "monospace"}}>
                   {key.replace(/_/g, " ").toUpperCase()}: {value}
                 </Typography>
               )
