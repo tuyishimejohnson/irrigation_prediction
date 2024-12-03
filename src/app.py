@@ -110,25 +110,36 @@ async def retrain_model(file: UploadFile = File(...)):
         scaler = StandardScaler()
         X_scaled = scaler.fit_transform(X)
         
-        # Create model for 3 numerical features
+        # Create model with regularization and different architecture
         model = tf.keras.Sequential([
-            tf.keras.layers.Dense(64, activation='relu', input_shape=(3,)),  # Changed to 3 features
-            tf.keras.layers.Dropout(0.2),
-            tf.keras.layers.Dense(32, activation='relu'),
-            tf.keras.layers.Dropout(0.2),
-            tf.keras.layers.Dense(16, activation='relu'),
-            tf.keras.layers.Dropout(0.2),
+            tf.keras.layers.Dense(32, activation='relu', input_shape=(3,),
+                                kernel_regularizer=tf.keras.regularizers.l2(0.01)),
+            tf.keras.layers.Dropout(0.3),
+            tf.keras.layers.Dense(16, activation='relu',
+                                kernel_regularizer=tf.keras.regularizers.l2(0.01)),
+            tf.keras.layers.Dropout(0.3),
+            tf.keras.layers.Dense(8, activation='relu',
+                                kernel_regularizer=tf.keras.regularizers.l2(0.01)),
+            tf.keras.layers.Dropout(0.3),
             tf.keras.layers.Dense(1, activation='sigmoid')
         ])
         
-        model.compile(optimizer='adam', 
+        model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.001), 
                      loss='binary_crossentropy',
                      metrics=['accuracy'])
         
+        # Add early stopping to prevent overfitting
+        early_stopping = tf.keras.callbacks.EarlyStopping(
+            monitor='val_loss',
+            patience=5,
+            restore_best_weights=True
+        )
+        
         history = model.fit(X_scaled, y,
-                          epochs=30,
+                          epochs=50,
                           batch_size=32,
-                          validation_split=0.2)
+                          validation_split=0.2,
+                          callbacks=[early_stopping])
         
         # Save model and scaler
         model_data = {
