@@ -32,39 +32,33 @@ except Exception as e:
     raise Exception("Model files not found. Please ensure model is trained and saved correctly.")
 
 class PredictionInput(BaseModel):
-    crop_id: int
-    soil_type: int
-    seedling_stage: int
     moi: float
     temp: float
     humidity: float
+    soil_type: str
+    seedling_stage: str
 
 @app.post("/predict")
 async def predict_irrigation(input_data: PredictionInput):
     try:
-        # Prepare input features - ONLY numerical features for scaling
-        features = np.array([
+        # Create features array with only numerical features
+        features = np.array([[
             input_data.moi,
-            input_data.temp,
+            input_data.temp, 
             input_data.humidity
-        ]).reshape(1, -1)
+        ]])
         
-        # Scale only the numerical features
+        # Scale features
         features_scaled = scaler.transform(features)
         
-        # Add categorical features AFTER scaling
-        features_final = np.hstack([
-            np.array([[input_data.crop_id]]),  # Add crop_id
-            features_scaled,
-            np.array([[
-                input_data.soil_type,
-                input_data.seedling_stage
-            ]])
-        ])
-        
-        # Make prediction with complete feature set
-        prediction = model.predict(features_final)[0]
+        # Make prediction
+        prediction = model.predict(features_scaled)[0]
         probability = float(prediction[0]) if hasattr(prediction, '__len__') else float(prediction)
+        
+        print(f"Debug - Features: {features}")  # Debug logging
+        print(f"Debug - Scaled features: {features_scaled}")  # Debug logging
+        print(f"Debug - Raw prediction: {prediction}")  # Debug logging
+        print(f"Debug - Probability: {probability}")  # Debug logging
         
         # Generate recommendation based on probability
         if probability > 0.8:
@@ -81,7 +75,6 @@ async def predict_irrigation(input_data: PredictionInput):
             "confidence": probability,
             "recommendation": recommendation,
             "input_parameters": {
-                "crop_id": input_data.crop_id,
                 "soil_type": input_data.soil_type,
                 "seedling_stage": input_data.seedling_stage,
                 "moi": input_data.moi,
@@ -91,6 +84,7 @@ async def predict_irrigation(input_data: PredictionInput):
         }
         
     except Exception as e:
+        print(f"Detailed error: {str(e)}")  # Debug logging
         raise HTTPException(status_code=500, detail=f"Prediction error: {str(e)}")
 
 @app.get("/model-info")
@@ -108,43 +102,50 @@ async def get_model_info():
 @app.post("/retrain")
 async def retrain_model(file: UploadFile = File(...)):
     try:
-        # Read the uploaded CSV file
         contents = await file.read()
         df = pd.read_csv(pd.io.common.BytesIO(contents))
         
-        # Prepare features
+        # Prepare numerical features only
         numerical_features = ['MOI', 'temp', 'humidity']
         X = df[numerical_features].values
         y = df['result'].values
         
-        # Split data
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
-        
         # Scale features
         scaler = StandardScaler()
-        X_train_scaled = scaler.fit_transform(X_train)
+        X_scaled = scaler.fit_transform(X)
         
-        # Create and train new model
+        # Create model with regularization and different architecture
         model = tf.keras.Sequential([
-            tf.keras.layers.Dense(64, activation='relu', input_shape=(X_train.shape[1],)),
-            tf.keras.layers.Dropout(0.2),
-            tf.keras.layers.Dense(32, activation='relu'),
-            tf.keras.layers.Dropout(0.2),
-            tf.keras.layers.Dense(16, activation='relu'),
-            tf.keras.layers.Dropout(0.2),
+            tf.keras.layers.Dense(32, activation='relu', input_shape=(3,),
+                                kernel_regularizer=tf.keras.regularizers.l2(0.01)),
+            tf.keras.layers.Dropout(0.3),
+            tf.keras.layers.Dense(16, activation='relu',
+                                kernel_regularizer=tf.keras.regularizers.l2(0.01)),
+            tf.keras.layers.Dropout(0.3),
+            tf.keras.layers.Dense(8, activation='relu',
+                                kernel_regularizer=tf.keras.regularizers.l2(0.01)),
+            tf.keras.layers.Dropout(0.3),
             tf.keras.layers.Dense(1, activation='sigmoid')
         ])
         
-        model.compile(optimizer='adam', 
+        model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.001), 
                      loss='binary_crossentropy',
                      metrics=['accuracy'])
         
-        history = model.fit(X_train_scaled, y_train,
-                          epochs=30,
-                          batch_size=32,
-                          validation_split=0.2)
+        # Add early stopping to prevent overfitting
+        early_stopping = tf.keras.callbacks.EarlyStopping(
+            monitor='val_loss',
+            patience=5,
+            restore_best_weights=True
+        )
         
-        # Save new model and scaler
+        history = model.fit(X_scaled, y,
+                          epochs=50,
+                          batch_size=32,
+                          validation_split=0.2,
+                          callbacks=[early_stopping])
+        
+        # Save model and scaler
         model_data = {
             'model': model,
             'scaler': scaler,
@@ -153,7 +154,6 @@ async def retrain_model(file: UploadFile = File(...)):
         }
         joblib.dump(model_data, 'models/cropmodel.pkl')
         
-        # Return training results
         return {
             "message": "Model retrained successfully",
             "history": {
@@ -161,6 +161,50 @@ async def retrain_model(file: UploadFile = File(...)):
                 "val_accuracy": float(history.history['val_accuracy'][-1])
             }
         }
-        
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Retraining error: {str(e)}")
+    
+@app.post("/predict")
+async def predict(data: dict):
+    try:
+        # Load the saved model and preprocessing objects
+        model_data = joblib.load('models/cropmodel.pkl')
+        model = model_data['model']
+        scaler = model_data['scaler']
+        le_soil = model_data['le_soil']
+        le_seedling = model_data['le_seedling']
+
+        # Transform categorical inputs
+        soil_type_encoded = le_soil.transform([data['soil_type']])[0]
+        seedling_stage_encoded = le_seedling.transform([data['seedling_stage']])[0]
+
+        # Create input array
+        input_data = np.array([[
+            data['moi'],
+            data['temp'], 
+            data['humidity']
+        ]])
+
+        # Scale the numerical features
+        input_scaled = scaler.transform(input_data)
+
+        # Make prediction
+        prediction = model.predict(input_scaled)
+        confidence = float(prediction[0][0])
+        needs_irrigation = bool(confidence >= 0.5)
+
+        # Generate recommendation
+        if needs_irrigation:
+            recommendation = "Based on the current conditions, irrigation is recommended."
+        else:
+            recommendation = "Based on the current conditions, irrigation is not necessary at this time."
+
+        return {
+            "needs_irrigation": needs_irrigation,
+            "confidence": confidence,
+            "recommendation": recommendation,
+            "input_parameters": data
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Prediction error: {str(e)}")
