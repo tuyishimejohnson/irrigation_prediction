@@ -3,13 +3,15 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import joblib
 import numpy as np
-from typing import Optional
+import pandas as pd
+from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
+import tensorflow as tf
 
 # Initialize FastAPI app
 app = FastAPI()
 
-# Enable CORS - Update to match your frontend URL
+# Enable CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173"],  # Updated to match your Vite frontend port
@@ -18,7 +20,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Load the trained model and preprocessors
+# Load the model and preprocessors
 try:
     model_data = joblib.load('models/cropmodel.pkl')
     model = model_data['model']
@@ -29,7 +31,6 @@ except Exception as e:
     print(f"Error loading model: {e}")
     raise Exception("Model files not found. Please ensure model is trained and saved correctly.")
 
-# Pydantic model for input validation
 class PredictionInput(BaseModel):
     crop_id: int
     soil_type: int
@@ -38,30 +39,32 @@ class PredictionInput(BaseModel):
     temp: float
     humidity: float
 
-class PredictionResponse(BaseModel):
-    needs_irrigation: bool
-    confidence: float
-    recommendation: str
-    input_parameters: dict
-
-@app.post("/predict", response_model=PredictionResponse)
+@app.post("/predict")
 async def predict_irrigation(input_data: PredictionInput):
     try:
-        # Prepare input features
+        # Prepare input features - ONLY numerical features for scaling
         features = np.array([
             input_data.moi,
             input_data.temp,
-            input_data.humidity,
-            input_data.soil_type,  # Already encoded from frontend
-            input_data.seedling_stage  # Already encoded from frontend
+            input_data.humidity
         ]).reshape(1, -1)
         
-        # Scale features
+        # Scale only the numerical features
         features_scaled = scaler.transform(features)
         
-        # Make prediction
-        prediction = model.predict(features_scaled)[0]
-        probability = model.predict_proba(features_scaled)[0][1]
+        # Add categorical features AFTER scaling
+        features_final = np.hstack([
+            np.array([[input_data.crop_id]]),  # Add crop_id
+            features_scaled,
+            np.array([[
+                input_data.soil_type,
+                input_data.seedling_stage
+            ]])
+        ])
+        
+        # Make prediction with complete feature set
+        prediction = model.predict(features_final)[0]
+        probability = float(prediction[0]) if hasattr(prediction, '__len__') else float(prediction)
         
         # Generate recommendation based on probability
         if probability > 0.8:
@@ -74,8 +77,8 @@ async def predict_irrigation(input_data: PredictionInput):
             recommendation = "No immediate irrigation needed"
         
         return {
-            "needs_irrigation": bool(prediction),
-            "confidence": float(probability),
+            "needs_irrigation": bool(probability > 0.5),
+            "confidence": probability,
             "recommendation": recommendation,
             "input_parameters": {
                 "crop_id": input_data.crop_id,
@@ -87,8 +90,6 @@ async def predict_irrigation(input_data: PredictionInput):
             }
         }
         
-    except KeyError as e:
-        raise HTTPException(status_code=400, detail=f"Invalid input value: {str(e)}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Prediction error: {str(e)}")
 
@@ -103,3 +104,63 @@ async def get_model_info():
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving model info: {str(e)}")
+
+@app.post("/retrain")
+async def retrain_model(file: UploadFile = File(...)):
+    try:
+        # Read the uploaded CSV file
+        contents = await file.read()
+        df = pd.read_csv(pd.io.common.BytesIO(contents))
+        
+        # Prepare features
+        numerical_features = ['MOI', 'temp', 'humidity']
+        X = df[numerical_features].values
+        y = df['result'].values
+        
+        # Split data
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+        
+        # Scale features
+        scaler = StandardScaler()
+        X_train_scaled = scaler.fit_transform(X_train)
+        
+        # Create and train new model
+        model = tf.keras.Sequential([
+            tf.keras.layers.Dense(64, activation='relu', input_shape=(X_train.shape[1],)),
+            tf.keras.layers.Dropout(0.2),
+            tf.keras.layers.Dense(32, activation='relu'),
+            tf.keras.layers.Dropout(0.2),
+            tf.keras.layers.Dense(16, activation='relu'),
+            tf.keras.layers.Dropout(0.2),
+            tf.keras.layers.Dense(1, activation='sigmoid')
+        ])
+        
+        model.compile(optimizer='adam', 
+                     loss='binary_crossentropy',
+                     metrics=['accuracy'])
+        
+        history = model.fit(X_train_scaled, y_train,
+                          epochs=30,
+                          batch_size=32,
+                          validation_split=0.2)
+        
+        # Save new model and scaler
+        model_data = {
+            'model': model,
+            'scaler': scaler,
+            'le_soil': le_soil,
+            'le_seedling': le_seedling
+        }
+        joblib.dump(model_data, 'models/cropmodel.pkl')
+        
+        # Return training results
+        return {
+            "message": "Model retrained successfully",
+            "history": {
+                "accuracy": float(history.history['accuracy'][-1]),
+                "val_accuracy": float(history.history['val_accuracy'][-1])
+            }
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Retraining error: {str(e)}")
