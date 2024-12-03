@@ -45,7 +45,7 @@ A machine learning-powered web application that predicts irrigation needs for cr
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/irrigation_prediction.git
+   git clone https://github.com/tuyishimejohnson/irrigation_prediction.git
    cd irrigation_prediction
    ```
 
