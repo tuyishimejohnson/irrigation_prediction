@@ -4,6 +4,7 @@ from pydantic import BaseModel
 import joblib
 import numpy as np
 from typing import Optional
+from sklearn.preprocessing import StandardScaler
 
 # Initialize FastAPI app
 app = FastAPI()
@@ -11,7 +12,7 @@ app = FastAPI()
 # Enable CORS - Update to match your frontend URL
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=["http://localhost:5173"],  # Updated to match your Vite frontend port
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -30,10 +31,10 @@ except Exception as e:
 
 # Pydantic model for input validation
 class PredictionInput(BaseModel):
-    crop_id: str
-    soil_type: str
-    seedling_stage: str
-    moi: float  
+    crop_id: int
+    soil_type: int
+    seedling_stage: int
+    moi: float
     temp: float
     humidity: float
 
@@ -46,21 +47,17 @@ class PredictionResponse(BaseModel):
 @app.post("/predict", response_model=PredictionResponse)
 async def predict_irrigation(input_data: PredictionInput):
     try:
-        # Transform categorical variables
-        soil_type_encoded = le_soil.transform([input_data.soil_type])[0]
-        seedling_stage_encoded = le_seedling.transform([input_data.seedling_stage])[0]
-        
         # Prepare input features
         features = np.array([
             input_data.moi,
             input_data.temp,
             input_data.humidity,
-            soil_type_encoded,
-            seedling_stage_encoded
-        ])
+            input_data.soil_type,  # Already encoded from frontend
+            input_data.seedling_stage  # Already encoded from frontend
+        ]).reshape(1, -1)
         
         # Scale features
-        features_scaled = scaler.transform(features.reshape(1, -1))
+        features_scaled = scaler.transform(features)
         
         # Make prediction
         prediction = model.predict(features_scaled)[0]
@@ -80,7 +77,14 @@ async def predict_irrigation(input_data: PredictionInput):
             "needs_irrigation": bool(prediction),
             "confidence": float(probability),
             "recommendation": recommendation,
-            "input_parameters": input_data.dict()
+            "input_parameters": {
+                "crop_id": input_data.crop_id,
+                "soil_type": input_data.soil_type,
+                "seedling_stage": input_data.seedling_stage,
+                "moi": input_data.moi,
+                "temp": input_data.temp,
+                "humidity": input_data.humidity
+            }
         }
         
     except KeyError as e:
