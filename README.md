@@ -33,10 +33,10 @@ A machine learning-powered web application that predicts irrigation needs for cr
 - Material-UI
 - Axios (API calls)
 
-
 ## Setup Instructions
 
 ### Prerequisites
+
 - Python 3.8+
 - Node.js 16+
 - npm or yarn
@@ -44,19 +44,22 @@ A machine learning-powered web application that predicts irrigation needs for cr
 ### Backend Setup
 
 1. Clone the repository:
+
    ```bash
    git clone https://github.com/tuyishimejohnson/irrigation_prediction.git
    cd irrigation_prediction
    ```
 
 2. Create and activate a virtual environment:
+
    ```bash
    python -m venv venv
-   - source venv/bin/activate  
+   - source venv/bin/activate
    - On Windows: venv\Scripts\activate
    ```
 
 3. Install backend dependencies:
+
    ```bash
    pip install -r requirements.txt
    ```
@@ -68,18 +71,21 @@ A machine learning-powered web application that predicts irrigation needs for cr
 
 Link of a deployed platform
 [Predict Irrigation Platform](https://predict-irrigation.netlify.app/)
-
+Demo video
+[Irrigation Prediction](https://youtu.be/atCyGx0iLTs)
 
 ### Docker Setup
 
 1. Make sure you have Docker and Docker Compose installed on your system
 
 2. Build and run the containers:
+
    ```bash
    docker-compose up --build
    ```
 
 3. Access the applications:
+
    - Frontend: http://localhost:5173
    - Backend API: http://localhost:8000
 
