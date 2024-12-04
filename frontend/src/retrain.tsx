@@ -72,7 +72,12 @@ const Retrain: React.FC<RetrainProps> = () => {
   };
 
   return (
-    <Box sx={{ maxWidth: 600, margin: "0 auto", padding: 3 }}>
+    <Box sx={{ 
+      maxWidth: 600, 
+      margin: "0 auto", 
+      padding: 3,
+      borderRadius: 4
+    }}>
       <Typography variant="h4" gutterBottom style={{ fontFamily: "monospace" }}>
         Retrain Model
       </Typography>
