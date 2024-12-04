@@ -17,8 +17,7 @@ interface TrainingResult {
   };
 }
 
-interface RetrainProps {}
-const Retrain: React.FC<RetrainProps> = () => {
+const Retrain: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -72,14 +71,16 @@ const Retrain: React.FC<RetrainProps> = () => {
   };
 
   return (
-    <Box sx={{ 
-      maxWidth: 600, 
-      margin: "0 auto", 
-      padding: 3,
-      borderRadius: 4
-    }}>
+    <Box
+      sx={{
+        maxWidth: 600,
+        margin: "0 auto",
+        padding: 3,
+        borderRadius: 4,
+      }}
+    >
       <Typography variant="h4" gutterBottom style={{ fontFamily: "monospace" }}>
-        Retrain Model
+        Retrain a Model
       </Typography>
 
       <Paper elevation={3} sx={{ padding: 3 }}>
