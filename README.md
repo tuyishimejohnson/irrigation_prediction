@@ -86,7 +86,7 @@ A machine learning-powered web application that predicts irrigation needs for cr
 
 3. Access the applications:
 
-   - Frontend: http://localhost:5173
+   - Frontend: https://predict-irrigation.netlify.app/
    - Backend API: http://localhost:8000
 
 4. To stop the containers:
